@@ -1,0 +1,25 @@
+<form>
+    <h3 class="form-header"><i class="fas fa-crown"></i> {{localize 'POLMAP.GM Fog Settings'}}</h3>
+    <div class="form-group">
+        <label for="gmAlpha">{{localize 'POLMAP.Opacity'}}</label>
+        <input type="range" name="gmAlpha" value="{{ gmAlpha }}" min="0" max="100" step="1" data-dtype="Number" />
+        <span class="range-value">{{ gmAlpha }}</span>
+    </div>
+    <hr />
+    <h3 class="form-header"><i class="fas fa-users"></i> {{localize 'POLMAP.Player Fog Settings'}}</h3>
+    <div class="form-group">
+        <label for="playerAlpha">Opacity</label>
+        <input type="range" name="playerAlpha" value="{{ playerAlpha }}" min="0" max="100" step="1"
+            data-dtype="Number" />
+        <span class="range-value">{{ playerAlpha }}</span>
+    </div>
+    <hr>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="saveDefaults">
+            <i class="fas fa-save"></i> {{localize 'POLMAP.Save current settings as default'}}
+        </button>
+        <button type="submit" name="submit">
+            <i class="fa fa-check"></i> {{localize 'POLMAP.OK'}}
+        </button>
+    </footer>
+</form>

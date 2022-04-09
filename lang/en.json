@@ -1,0 +1,15 @@
+{
+	"POLMAP.Political Map Overlay": "Political Map Overlay",
+	"POLMAP.Political Map Options": "Political Map Options",
+	"POLMAP.Color": "Color",
+	"POLMAP.GM Fog Settings": "GM Fog Settings",
+	"POLMAP.Opacity": "Opacity",
+	"POLMAP.Player Fog Settings": "Player Fog Settings",
+	"POLMAP.Save current settings as default": "Save current settings as default",
+	"POLMAP.OK": "OK",
+	"POLMAP.Enable/Disable Political Map Overlay": "Enable/Disable Political Map Overlay",
+	"POLMAP.Marker Tool": "Marker Tool",
+	"POLMAP.Scene Configuration": "Scene Configuration",
+	"POLMAP.Reset Political Map Overlay": "Reset Political Map Overlay",
+	"POLMAP.Are you sure? Political map areas will be reset.": "Are you sure? Political map areas will be reset."
+}

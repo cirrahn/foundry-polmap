@@ -1,0 +1,14 @@
+<div id="polmap-palette" class="polmap__flex-col polmap__wrp-palette">
+	<form class="polmap__flex-col">
+		<div class="polmap__flex-wrap">
+			{{#each @root.colors as |color|}}
+				<button class="polmap__btn-color" type="button" data-hex="{{color.color}}" style="background-color: {{color.color}}" title="{{color.name}}" name="btn-color"></button>
+			{{/each}}
+		</div>
+
+		<div class="polmap__flex-vh-center polmap__wrp-btns-other">
+			<input type="color" name="paletteColor" class="polmap__ipt-color" value="{{paletteColor}}" title="Color Picker" data-dtype="String"/>
+			<button class="polmap__btn-erase" type="button" title="Eraser" name="btn-erase"><i class="fas fa-eraser"></i></button>
+		</div>
+	</form>
+</div>
