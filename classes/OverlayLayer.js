@@ -83,15 +83,19 @@ export default class OverlayLayer extends CanvasLayer {
    * Gets and sets various layer wide properties
    * Some properties have different values depending on if user is a GM or player
    */
-	getSetting (name) {
-		let setting = canvas.scene.getFlag(this.layername, name);
+	getSetting (name, {scene = null} = {}) {
+		scene = scene || canvas.scene;
+
+		let setting = scene.getFlag(this.layername, name);
 		if (setting === undefined) setting = this.getUserSetting(name);
 		if (setting === undefined) setting = this.DEFAULTS[name];
 		return setting;
 	}
 
-	async setSetting (name, value) {
-		return canvas.scene.setFlag(this.layername, name, value);
+	async setSetting (name, value, {scene = null} = {}) {
+		scene = scene || canvas.scene;
+
+		return scene.setFlag(this.layername, name, value);
 	}
 
 	getUserSetting (name) {

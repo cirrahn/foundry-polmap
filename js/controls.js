@@ -39,7 +39,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
 				title: game.i18n.localize("POLMAP.Scene Configuration"),
 				icon: "fas fa-cog",
 				onClick: () => {
-					new PoliticalMapConfig().render(true);
+					new PoliticalMapConfig({scene: canvas.scene}).render(true);
 				},
 				button: true,
 			},

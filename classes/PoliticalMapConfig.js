@@ -1,4 +1,9 @@
 export default class PoliticalMapConfig extends FormApplication {
+	constructor ({scene}) {
+		super();
+		this._scene = scene;
+	}
+
 	static get defaultOptions () {
 		return mergeObject(super.defaultOptions, {
 			classes: ["form"],
@@ -23,8 +28,8 @@ export default class PoliticalMapConfig extends FormApplication {
 	getData () {
 		// Return data to the template
 		return {
-			gmAlpha: Math.round(canvas.polmap.getSetting("gmAlpha") * 100),
-			playerAlpha: Math.round(canvas.polmap.getSetting("playerAlpha") * 100),
+			gmAlpha: Math.round(canvas.polmap.getSetting("gmAlpha", {scene: this._scene}) * 100),
+			playerAlpha: Math.round(canvas.polmap.getSetting("playerAlpha", {scene: this._scene}) * 100),
 		};
 	}
 
@@ -45,7 +50,7 @@ export default class PoliticalMapConfig extends FormApplication {
 					// If setting is an opacity slider, convert from 1-100 to 0-1
 					if (["gmAlpha", "playerAlpha"].includes(key)) val /= 100;
 					// Save settings to scene
-					await canvas.polmap.setSetting(key, val);
+					await canvas.polmap.setSetting(key, val, {scene: this._scene});
 					// If saveDefaults button clicked, also save to user's defaults
 					if (event.submitter?.name === "saveDefaults") {
 						canvas.polmap.setUserSetting(key, val);
