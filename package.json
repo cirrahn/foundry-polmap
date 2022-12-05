@@ -13,8 +13,8 @@
 		"build": "npm run build:css"
 	},
 	"devDependencies": {
-		"@league-of-foundry-developers/foundry-vtt-types": "^9.255.3",
-		"eslint": "^8.13.0",
-		"sass": "^1.50.0"
+		"@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
+		"eslint": "^8.29.0",
+		"sass": "^1.56.1"
 	}
 }

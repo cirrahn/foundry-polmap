@@ -1,6 +1,6 @@
 import {polmapLog} from "../js/helpers.js";
 
-export default class OverlayLayer extends CanvasLayer {
+export default class OverlayLayer extends InteractionLayer {
 	static _TINT_ERASER = 0xFF00FF;
 
 	constructor (layername) {
@@ -20,6 +20,9 @@ export default class OverlayLayer extends CanvasLayer {
 			visible: false,
 		};
 		this._tempSettings = {};
+
+		// So you can hit escape on the keyboard and it will bring up the menu
+		this._controlled = {};
 	}
 
 	static get layerOptions () {
@@ -131,7 +134,7 @@ export default class OverlayLayer extends CanvasLayer {
 		if (history === undefined) {
 			return;
 		}
-		// If history is zero, reset scene fog
+		// If history is zero, reset scene overlay
 		if (history.events.length === 0) this.resetLayer(false);
 		if (start === undefined) start = 0;
 		if (stop === undefined) stop = history.events.length;
@@ -325,8 +328,13 @@ export default class OverlayLayer extends CanvasLayer {
 	}
 
 	async draw () {
-		super.draw();
+		const out = await super.draw();
 		this.overlayInit();
 		this.addChild(this.layer);
+		return out;
+	}
+
+	static refreshZIndex () {
+		canvas.polmap.zIndex = game.settings.get("polmap", "zIndex");
 	}
 }

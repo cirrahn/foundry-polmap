@@ -70,7 +70,9 @@ export default class PoliticalMapLayer extends OverlayLayer {
 			visible: false,
 			zIndex: 10,
 		});
+	}
 
+	canvasInit () {
 		// Set default flags if they dont exist already
 		Object.keys(this.DEFAULTS).forEach((key) => {
 			if (!game.user.isGM) return;
@@ -115,9 +117,9 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	}
 
 	/**
-   * Sets the scene's alpha for the primary layer.
-   * @param alpha {Number} 0-1 opacity representation
-   */
+	* Sets the scene's alpha for the primary layer.
+	* @param alpha {Number} 0-1 opacity representation
+	*/
 	async setAlpha (alpha) {
 		this.alpha = alpha;
 	}
@@ -127,8 +129,8 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	/* -------------------------------------------- */
 
 	/**
-   * React to updates of canvas.scene flags
-   */
+	* React to updates of canvas.scene flags
+	*/
 	_updateScene (scene, data) {
 		// Check if update applies to current viewed scene
 		if (!scene._view) return;
@@ -150,8 +152,8 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	}
 
 	/**
-   * Adds the mouse listeners to the layer
-   */
+	* Adds the mouse listeners to the layer
+	*/
 	_registerMouseListeners () {
 		this.addListener("pointerdown", this._pointerDown);
 		this.addListener("pointerup", this._pointerUp);
@@ -159,8 +161,8 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	}
 
 	/**
-   * Adds the keyboard listeners to the layer
-   */
+	* Adds the keyboard listeners to the layer
+	*/
 	_registerKeyboardListeners () {
 		$(document).keydown((event) => {
 			// Only react if polmap layer is active
@@ -176,8 +178,8 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	}
 
 	/**
-    * Sets the active tool & shows preview for grid tool.
-    */
+	 * Sets the active tool & shows preview for grid tool.
+	 */
 	setActiveTool (tool) {
 		this.clearActiveTool();
 		this.activeTool = tool;
@@ -190,14 +192,14 @@ export default class PoliticalMapLayer extends OverlayLayer {
 
 		switch (tool) {
 			case "grid": {
-				if (this.constructor._isSquareGrid(canvas.scene.data.gridType)) {
-					this.boxPreview.width = canvas.scene.data.grid;
-					this.boxPreview.height = canvas.scene.data.grid;
+				if (this.constructor._isSquareGrid(canvas.scene.grid.type)) {
+					this.boxPreview.width = canvas.scene.grid.size;
+					this.boxPreview.height = canvas.scene.grid.size;
 					this.boxPreview.visible = true;
 					break;
 				}
 
-				if (this.constructor._isHexGrid(canvas.scene.data.gridType)) {
+				if (this.constructor._isHexGrid(canvas.scene.grid.type)) {
 					this.polygonPreview.visible = true;
 				}
 			}
@@ -220,17 +222,21 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	}
 
 	/**
-   * Aborts any active drawing tools
-   */
+	* Aborts any active drawing tools
+	*/
 	clearActiveTool () {
 		// Box preview
-		this.boxPreview.visible = false;
+		if (this.boxPreview) this.boxPreview.visible = false;
 		// Shape preview
-		this.polygonPreview.clear();
-		this.polygonPreview.visible = false;
+		if (this.polygonPreview) {
+			this.polygonPreview.clear();
+			this.polygonPreview.visible = false;
+		}
 		// Erase preview
-		this.erasePreview.clear();
-		this.erasePreview.visible = false;
+		if (this.erasePreview) {
+			this.erasePreview.clear();
+			this.erasePreview.visible = false;
+		}
 		// Cancel op flag
 		this.op = false;
 		// Clear history buffer
@@ -249,8 +255,8 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	}
 
 	/**
-   * Mouse handlers for canvas layer interactions
-   */
+	* Mouse handlers for canvas layer interactions
+	*/
 	_pointerDown (evt) {
 		// Don't allow new action if history push still in progress
 		if (this.historyBuffer.length > 0) {
@@ -333,15 +339,15 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	}
 
 	/**
-   * Grid Tool
-   */
+	* Grid Tool
+	*/
 	_pointerDownGrid () {
 		this.op = "grid";
 		this._dupes = [];
 	}
 
 	_pointerMoveGrid (p) {
-		const {grid, gridType} = canvas.scene.data;
+		const {size: grid, type: gridType} = canvas.scene.grid;
 
 		const isErasingVisual = this.getTempSetting("isErasing");
 		const isErasing = isErasingVisual || this.getTempSetting("isErasingRightClick");
@@ -442,51 +448,55 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	}
 
 	/*
-   * Checks grid type, creating a hex grid layout if required
-   */
+	* Checks grid type, creating a hex grid layout if required
+	*/
 	_initGrid () {
-		const { grid } = canvas.scene.data;
-		switch (canvas.scene.data.gridType) {
+		const grid = canvas.scene.grid.size;
+		switch (canvas.scene.grid.type) {
 			// Pointy Hex Odd
 			case 2:
 				this.gridLayout = new Layout(
 					Layout.pointy,
-					{ x: grid / 2, y: grid / 2 },
-					{ x: 0, y: grid / 2 },
+					{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
+					{ x: 0, y: grid / Math.sqrt(3)},
 				);
 				break;
 			// Pointy Hex Even
 			case 3:
 				this.gridLayout = new Layout(
 					Layout.pointy,
-					{ x: grid / 2, y: grid / 2 },
-					{ x: Math.sqrt(3) * grid / 4, y: grid / 2 },
+					{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
+					{ x: grid / 2, y: grid / Math.sqrt(3) },
 				);
 				break;
 			// Flat Hex Odd
 			case 4:
 				this.gridLayout = new Layout(
 					Layout.flat,
-					{ x: grid / 2, y: grid / 2 },
-					{ x: grid / 2, y: 0 },
+					{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
+					{ x: grid / Math.sqrt(3), y: 0 },
 				);
 				break;
 			// Flat Hex Even
 			case 5:
 				this.gridLayout = new Layout(
 					Layout.flat,
-					{ x: grid / 2, y: grid / 2 },
-					{ x: grid / 2, y: Math.sqrt(3) * grid / 4 },
+					{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
+					{ x: grid / Math.sqrt(3), y: grid / 2},
 				);
+				break;
+			// Square grid
+			default:
 				break;
 		}
 	}
 
 	async draw () {
-		super.draw();
+		const out = await super.draw();
 		this.init();
 		this.addChild(this.boxPreview);
 		this.addChild(this.polygonPreview);
 		this.addChild(this.erasePreview);
+		return out;
 	}
 }

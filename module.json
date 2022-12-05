@@ -1,9 +1,19 @@
 {
-	"name": "polmap",
+	"id": "polmap",
 	"title": "Political Map Overlay",
 	"description": "Color hexes/squares according to who owns the territory.",
-	"version": "1.0.1",
-	"author": "cirrahn",
+	"version": "2.0.0",
+	"authors": [
+		{
+			"name": "cirrahn",
+			"url": "https://www.patreon.com/cirrahn",
+			"discord": "Murray#3081",
+			"flags": {
+				"patreon": "cirrahn",
+				"github": "cirrahn"
+			}
+		}
+	],
 	"keywords": [
 		"visuals",
 		"tools"
@@ -18,9 +28,11 @@
 	"readme": "README.md",
 	"license": "MIT",
 	"manifest": "https://raw.githubusercontent.com/cirrahn/foundry-polmap/master/module.json",
-	"download": "https://github.com/cirrahn/foundry-polmap/archive/v1.0.1.zip",
-	"minimumCoreVersion": "9",
-	"compatibleCoreVersion": "9",
+	"download": "https://github.com/cirrahn/foundry-polmap/archive/v2.0.0.zip",
+	"compatibility": {
+		"minimum": "10",
+		"verified": "10.291"
+	},
 	"esmodules": [
 		"js/polmap.js",
 		"js/controls.js"
