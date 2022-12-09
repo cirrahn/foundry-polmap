@@ -452,42 +452,83 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	*/
 	_initGrid () {
 		const grid = canvas.scene.grid.size;
-		switch (canvas.scene.grid.type) {
-			// Pointy Hex Odd
-			case 2:
-				this.gridLayout = new Layout(
-					Layout.pointy,
-					{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
-					{ x: 0, y: grid / Math.sqrt(3)},
-				);
-				break;
-			// Pointy Hex Even
-			case 3:
-				this.gridLayout = new Layout(
-					Layout.pointy,
-					{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
-					{ x: grid / 2, y: grid / Math.sqrt(3) },
-				);
-				break;
-			// Flat Hex Odd
-			case 4:
-				this.gridLayout = new Layout(
-					Layout.flat,
-					{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
-					{ x: grid / Math.sqrt(3), y: 0 },
-				);
-				break;
-			// Flat Hex Even
-			case 5:
-				this.gridLayout = new Layout(
-					Layout.flat,
-					{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
-					{ x: grid / Math.sqrt(3), y: grid / 2},
-				);
-				break;
-			// Square grid
-			default:
-				break;
+
+		if (canvas.scene.flags.core?.legacyHex) {
+			switch (canvas.scene.grid.type) {
+				// Pointy Hex Odd
+				case 2:
+					this.gridLayout = new Layout(
+						Layout.pointy,
+						{ x: grid / 2, y: grid / 2 },
+						{ x: 0, y: grid / 2 },
+					);
+					break;
+				// Pointy Hex Even
+				case 3:
+					this.gridLayout = new Layout(
+						Layout.pointy,
+						{ x: grid / 2, y: grid / 2 },
+						{ x: Math.sqrt(3) * grid / 4, y: grid / 2 },
+					);
+					break;
+				// Flat Hex Odd
+				case 4:
+					this.gridLayout = new Layout(
+						Layout.flat,
+						{ x: grid / 2, y: grid / 2 },
+						{ x: grid / 2, y: 0 },
+					);
+					break;
+				// Flat Hex Even
+				case 5:
+					this.gridLayout = new Layout(
+						Layout.flat,
+						{ x: grid / 2, y: grid / 2 },
+						{ x: grid / 2, y: Math.sqrt(3) * grid / 4 },
+					);
+					break;
+				// Square grid
+				default:
+					break;
+			}
+		} else {
+			switch (canvas.scene.grid.type) {
+				// Pointy Hex Odd
+				case 2:
+					this.gridLayout = new Layout(
+						Layout.pointy,
+						{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
+						{ x: 0, y: grid / Math.sqrt(3)},
+					);
+					break;
+				// Pointy Hex Even
+				case 3:
+					this.gridLayout = new Layout(
+						Layout.pointy,
+						{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
+						{ x: grid / 2, y: grid / Math.sqrt(3) },
+					);
+					break;
+				// Flat Hex Odd
+				case 4:
+					this.gridLayout = new Layout(
+						Layout.flat,
+						{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
+						{ x: grid / Math.sqrt(3), y: 0 },
+					);
+					break;
+				// Flat Hex Even
+				case 5:
+					this.gridLayout = new Layout(
+						Layout.flat,
+						{ x: grid / Math.sqrt(3), y: grid / Math.sqrt(3)},
+						{ x: grid / Math.sqrt(3), y: grid / 2},
+					);
+					break;
+				// Square grid
+				default:
+					break;
+			}
 		}
 	}
 
