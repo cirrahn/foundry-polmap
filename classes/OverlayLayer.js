@@ -20,9 +20,6 @@ export default class OverlayLayer extends InteractionLayer {
 			visible: false,
 		};
 		this._tempSettings = {};
-
-		// So you can hit escape on the keyboard and it will bring up the menu
-		this._controlled = {};
 	}
 
 	static get layerOptions () {
@@ -30,6 +27,9 @@ export default class OverlayLayer extends InteractionLayer {
 			zIndex: 19, // Below drawings (which is 20)
 		});
 	}
+
+	// So you can hit escape on the keyboard and it will bring up the menu
+	get controlled () { return {}; }
 
 	/* -------------------------------------------- */
 	/*  Init                                        */
@@ -50,9 +50,6 @@ export default class OverlayLayer extends InteractionLayer {
 		this.visible = v;
 
 		this.setAlpha(this.getAlpha());
-
-		// So you can hit escape on the keyboard and it will bring up the menu
-		this._controlled = {};
 
 		this.layerTexture = OverlayLayer.getLayerTexture();
 		this.layer = new PIXI.Sprite(this.layerTexture);
