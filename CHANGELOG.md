@@ -1,5 +1,10 @@
 # Changelog
 
+#### 2.0.1
+
+- Fixed hex sizing on legacy hex scenes.
+- Fixed crash when pressing Escape key.
+
 #### 2.0.0
 
 - v10 support.
