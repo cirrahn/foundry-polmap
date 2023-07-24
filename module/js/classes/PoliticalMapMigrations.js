@@ -1,4 +1,4 @@
-import {polmapLog} from "../js/helpers.js";
+import {polmapLog} from "../helpers.js";
 
 export default class PoliticalMapMigrations {
 	static async check () {

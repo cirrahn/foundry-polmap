@@ -1,5 +1,5 @@
-import {hexToWeb, webToHex} from "../js/helpers.js";
-import {RGB_BASIC} from "../js/consts.js";
+import {hexToWeb, webToHex} from "../helpers.js";
+import {RGB_BASIC} from "../consts.js";
 
 export default class PaletteControls extends FormApplication {
 	constructor (...args) {

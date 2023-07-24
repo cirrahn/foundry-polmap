@@ -1,8 +1,8 @@
-import PoliticalMapLayer from "../classes/PoliticalMapLayer.js";
-import PoliticalMapMigrations from "../classes/PoliticalMapMigrations.js";
+import PoliticalMapLayer from "./classes/PoliticalMapLayer.js";
+import PoliticalMapMigrations from "./classes/PoliticalMapMigrations.js";
 import config from "./config.js";
 import {polmapLog} from "./helpers.js";
-import OverlayLayer from "../classes/OverlayLayer.js";
+import OverlayLayer from "./classes/OverlayLayer.js";
 
 Hooks.once("init", () => {
 	polmapLog("Initializing polmap", true);

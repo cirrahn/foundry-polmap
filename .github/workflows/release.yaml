@@ -1,0 +1,48 @@
+name: Create Release
+
+on:
+   push:
+      tags:
+         - 'v[0-9]+.[0-9]+.[0-9]+'
+
+   workflow_dispatch:
+
+concurrency:
+   group: "release"
+   cancel-in-progress: true
+
+jobs:
+   build-and-deploy:
+      runs-on: ubuntu-latest
+      steps:
+         -  uses: actions/checkout@master
+
+         -  name: Get Changelog
+            id: changelog
+            run: |
+               npm ci
+               CHANGELOG=$(node script/get-changelog.js --tag ${{github.ref_name}})
+               echo "Changelog is:"
+               echo "$CHANGELOG"
+               EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+               echo "CHANGELOG<<$EOF" >> "$GITHUB_ENV"
+               echo "${CHANGELOG}" >> $GITHUB_ENV
+               echo "$EOF" >> "$GITHUB_ENV"
+
+         -  name: Build
+            run: |
+               npm ci
+               npm run release
+
+         -  name: Zip
+            run: |
+               pushd dist/polmap
+               zip -r ../polmap.zip .
+               popd
+
+         -  name: Create Release
+            run: |
+               echo "${{env.CHANGELOG}}" > NOTES_FILE.md
+               gh release create "${{github.ref_name}}" --title "${{github.ref_name}}" --notes-file NOTES_FILE.md dist/polmap.zip dist/polmap/module.json
+            env:
+               GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

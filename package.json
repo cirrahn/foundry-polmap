@@ -1,20 +1,33 @@
 {
-	"name": "foundry-polmap",
+	"name": "polmap",
+	"private": true,
 	"version": "2.0.1",
 	"author": "cirrahn",
 	"type": "module",
 	"license": "MIT",
 	"scripts": {
-		"test:js": "eslint classes js",
-		"lint:js": "eslint classes js --fix",
-		"test": "npm npm run test:js",
-		"lint": "npm npm run lint:js",
-		"build:css": "sass --style=compressed scss/main.scss:css/main.css",
-		"build": "npm run build:css"
+		"build": "cross-env NODE_ENV=development rollup --config rollup.config.js --watch",
+		"release": "cross-env NODE_ENV=production rollup --config rollup.config.js ",
+		"test": "npm run test:js && npm run test:css",
+		"lint": "npm run lint:js && npm run lint:css",
+		"test:js": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+		"lint:js": "eslint module/js foundry-path.js rollup.config.js build script test --fix",
+		"test:css": "stylelint module/scss/*.scss",
+		"lint:css": "npm run test:css -- --fix",
+		"preversion": "npm t"
 	},
 	"devDependencies": {
 		"@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
-		"eslint": "^8.29.0",
-		"sass": "^1.56.1"
+		"commander": "^11.0.0",
+		"cross-env": "^7.0.3",
+		"eslint": "^8.45.0",
+		"jest": "^29.6.1",
+		"rollup": "^3.26.3",
+		"rollup-plugin-copy": "^3.4.0",
+		"rollup-plugin-scss": "^4.0.0",
+		"rollup-plugin-watch": "^1.0.2",
+		"sass": "^1.56.1",
+		"stylelint": "^15.10.2",
+		"stylelint-config-sass-guidelines": "^10.0.0"
 	}
 }

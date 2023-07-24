@@ -1,5 +1,5 @@
-import PoliticalMapConfig from "../classes/PoliticalMapConfig.js";
-import PaletteControls from "../classes/PaletteControls.js";
+import PoliticalMapConfig from "./classes/PoliticalMapConfig.js";
+import PaletteControls from "./classes/PaletteControls.js";
 
 let $wrpPaletteControls;
 

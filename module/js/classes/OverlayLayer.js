@@ -1,4 +1,4 @@
-import {polmapLog} from "../js/helpers.js";
+import {polmapLog} from "../helpers.js";
 
 export default class OverlayLayer extends InteractionLayer {
 	static _TINT_ERASER = 0xFF00FF;

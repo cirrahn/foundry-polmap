@@ -1,6 +1,6 @@
 import OverlayLayer from "./OverlayLayer.js";
 import {Layout} from "../libs/hexagons.js";
-import {hexObjsToArr} from "../js/helpers.js";
+import {hexObjsToArr} from "../helpers.js";
 
 export default class PoliticalMapLayer extends OverlayLayer {
 	static _LINE_OPTS_ERASE = {

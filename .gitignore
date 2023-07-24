@@ -1,3 +1,17 @@
-.idea
+# IDE Files
+.idea/
+*.iml
+*.vcs
+.vscode
+
+# Node
 node_modules
+
+# Built files
 css/*.map
+
+# Scratch files
+scratch/
+
+# Config files
+foundryconfig.json
