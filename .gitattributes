@@ -1,2 +1,10 @@
 *.js              text eol=lf
 *.json            text eol=lf
+*.md              text eol=lf
+
+# Ensure LDB files are handled as binary
+module/packs/**   binary
+
+# LFS
+*.pdf filter=lfs diff=lfs merge=lfs -text
+*.webm filter=lfs diff=lfs merge=lfs -text
