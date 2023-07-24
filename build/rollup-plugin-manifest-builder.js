@@ -33,8 +33,8 @@ export class RollupManifestBuilder {
 			"changelog": `https://raw.githubusercontent.com/cirrahn/foundry-${packageJson.name}/main/CHANGELOG.md`,
 
 			"compatibility": {
-				"minimum": "10",
-				"verified": "10.303",
+				"minimum": "11",
+				"verified": "11.306",
 			},
 
 			"esmodules": [

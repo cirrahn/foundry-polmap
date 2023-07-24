@@ -3,27 +3,31 @@ import {polmapLog} from "../helpers.js";
 export default class OverlayLayer extends InteractionLayer {
 	static _TINT_ERASER = 0xFF00FF;
 
-	constructor (layername) {
+	constructor (layerName) {
 		super();
-		this.lock = false;
-		this.layername = layername;
-		this.historyBuffer = [];
-		this.pointer = 0;
-		this.gridLayout = {};
-		this.dragStart = {x: 0, y: 0}; // Not actually used, just to prevent foundry from complaining
-		this.history = [];
-		this.BRUSH_TYPES = {
+		this._isLocked = false;
+		this._layerName = layerName;
+		this._historyBuffer = [];
+		this._pointer = 0;
+		this._gridLayout = {};
+		this._BRUSH_TYPES = {
 			BOX: 1,
 			POLYGON: 3,
 		};
-		this.DEFAULTS = {
+		this._DEFAULTS = {
 			visible: false,
 		};
 		this._tempSettings = {};
+		this._layerTexture = null;
+		this._layer = null;
+
+		// Allow zIndex prop to function for items on this layer
+		this.sortableChildren = true;
 	}
 
 	static get layerOptions () {
 		return mergeObject(super.layerOptions, {
+			baseClass: InteractionLayer,
 			zIndex: 19, // Below drawings (which is 20)
 		});
 	}
@@ -43,30 +47,27 @@ export default class OverlayLayer extends InteractionLayer {
    * layer        - PIXI Sprite which holds all the region elements
    * layerTexture - renderable texture that holds the actual region data
    */
-	overlayInit () {
+	async pInitOverlay () {
 		// Check if layer is flagged visible
 		let v = this.getSetting("visible");
 		if (v === undefined) v = false;
 		this.visible = v;
 
-		this.setAlpha(this.getAlpha());
+		await this.setAlpha(this.getAlpha());
 
-		this.layerTexture = OverlayLayer.getLayerTexture();
-		this.layer = new PIXI.Sprite(this.layerTexture);
+		this._layerTexture = this.constructor._getLayerTexture();
+		this._layer = new PIXI.Sprite(this._layerTexture);
 		this.setClear();
 
-		// Allow zIndex prop to function for items on this layer
-		this.sortableChildren = true;
-
 		// Render initial history stack
-		this.renderStack();
+		await this.pRenderStack();
 	}
 
 	/* -------------------------------------------- */
 	/*  History & Buffer                            */
 	/* -------------------------------------------- */
 
-	static getLayerTexture () {
+	static _getLayerTexture () {
 		const d = canvas.dimensions;
 		let res = 1.0;
 		if (d.width * d.height > 16000 ** 2) res = 0.25;
@@ -86,26 +87,26 @@ export default class OverlayLayer extends InteractionLayer {
 	getSetting (name, {scene = null} = {}) {
 		scene = scene || canvas.scene;
 
-		let setting = scene.getFlag(this.layername, name);
+		let setting = scene.getFlag(this._layerName, name);
 		if (setting === undefined) setting = this.getUserSetting(name);
-		if (setting === undefined) setting = this.DEFAULTS[name];
+		if (setting === undefined) setting = this._DEFAULTS[name];
 		return setting;
 	}
 
 	async setSetting (name, value, {scene = null} = {}) {
 		scene = scene || canvas.scene;
 
-		return scene.setFlag(this.layername, name, value);
+		return scene.setFlag(this._layerName, name, value);
 	}
 
 	getUserSetting (name) {
-		let setting = game.user.getFlag(this.layername, name);
-		if (setting === undefined) setting = this.DEFAULTS[name];
+		let setting = game.user.getFlag(this._layerName, name);
+		if (setting === undefined) setting = this._DEFAULTS[name];
 		return setting;
 	}
 
 	async setUserSetting (name, value) {
-		return game.user.setFlag(this.layername, name, value);
+		return game.user.setFlag(this._layerName, name, value);
 	}
 
 	getTempSetting (name) {
@@ -122,22 +123,22 @@ export default class OverlayLayer extends InteractionLayer {
    * @param start {Number}        The position in the history stack to begin rendering from
    * @param stop {Number}        The position in the history stack to stop rendering
    */
-	renderStack (
-		history = canvas.scene.getFlag(this.layername, "history"),
-		start = this.pointer,
-		stop = canvas.scene.getFlag(this.layername, "history.pointer"),
+	async pRenderStack (
+		history = canvas.scene.getFlag(this._layerName, "history"),
+		start = this._pointer,
+		stop = canvas.scene.getFlag(this._layerName, "history.pointer"),
 	) {
 		// If history is blank, do nothing
 		if (history === undefined) {
 			return;
 		}
 		// If history is zero, reset scene overlay
-		if (history.events.length === 0) this.resetLayer(false);
+		if (history.events.length === 0) await this.pResetLayer(false);
 		if (start === undefined) start = 0;
 		if (stop === undefined) stop = history.events.length;
 		// If pointer precedes the stop, reset and start from 0
-		if (stop <= this.pointer) {
-			this.resetLayer(false);
+		if (stop <= this._pointer) {
+			await this.pResetLayer(false);
 			start = 0;
 		}
 
@@ -145,11 +146,11 @@ export default class OverlayLayer extends InteractionLayer {
 		// Render all ops starting from pointer
 		for (let i = start; i < stop; i += 1) {
 			for (let j = 0; j < history.events[i].length; j += 1) {
-				this.renderBrush(history.events[i][j], false);
+				this._renderBrushGraphic(history.events[i][j], false);
 			}
 		}
 		// Update local pointer
-		this.pointer = stop;
+		this._pointer = stop;
 	}
 
 	/**
@@ -157,10 +158,10 @@ export default class OverlayLayer extends InteractionLayer {
    */
 	async commitHistory () {
 		// Do nothing if no history to be committed, otherwise get history
-		if (this.historyBuffer.length === 0) return;
-		if (this.lock) return;
-		this.lock = true;
-		let history = canvas.scene.getFlag(this.layername, "history");
+		if (this._historyBuffer.length === 0) return;
+		if (this._isLocked) return;
+		this._isLocked = true;
+		let history = canvas.scene.getFlag(this._layerName, "history");
 		// If history storage doesn't exist, create it
 		if (!history) {
 			history = {
@@ -171,31 +172,31 @@ export default class OverlayLayer extends InteractionLayer {
 		// If pointer is less than history length (f.x. user undo), truncate history
 		history.events = history.events.slice(0, history.pointer);
 		// Push the new history buffer to the scene
-		history.events.push(this.historyBuffer);
+		history.events.push(this._historyBuffer);
 		history.pointer = history.events.length;
-		await canvas.scene.unsetFlag(this.layername, "history");
+		await canvas.scene.unsetFlag(this._layerName, "history");
 		await this.setSetting("history", history);
-		polmapLog(`Pushed ${this.historyBuffer.length} updates.`);
+		polmapLog(`Pushed ${this._historyBuffer.length} updates.`);
 		// Clear the history buffer
-		this.historyBuffer = [];
-		this.lock = false;
+		this._historyBuffer = [];
+		this._isLocked = false;
 	}
 
 	/**
    * Resets the layer
    * @param save {Boolean} If true, also resets the layer history
    */
-	async resetLayer (save = true) {
+	async pResetLayer (save = true) {
 		// Clear the layer
 		this.setClear();
 		// If save, also unset history and reset pointer
 		if (save) {
-			await canvas.scene.unsetFlag(this.layername, "history");
-			await canvas.scene.setFlag(this.layername, "history", {
+			await canvas.scene.unsetFlag(this._layerName, "history");
+			await canvas.scene.setFlag(this._layerName, "history", {
 				events: [],
 				pointer: 0,
 			});
-			this.pointer = 0;
+			this._pointer = 0;
 		}
 	}
 
@@ -207,19 +208,19 @@ export default class OverlayLayer extends InteractionLayer {
 		polmapLog(`Undoing ${steps} steps.`);
 		// Grab existing history
 		// Todo: this could probably just grab and set the pointer for a slight performance improvement
-		let history = canvas.scene.getFlag(this.layername, "history");
+		let history = canvas.scene.getFlag(this._layerName, "history");
 		if (!history) {
 			history = {
 				events: [],
 				pointer: 0,
 			};
 		}
-		let newpointer = this.pointer - steps;
+		let newpointer = this._pointer - steps;
 		if (newpointer < 0) newpointer = 0;
 		// Set new pointer & update history
 		history.pointer = newpointer;
-		await canvas.scene.unsetFlag(this.layername, "history");
-		await canvas.scene.setFlag(this.layername, "history", history);
+		await canvas.scene.unsetFlag(this._layerName, "history");
+		await canvas.scene.setFlag(this._layerName, "history", history);
 	}
 
 	/* -------------------------------------------- */
@@ -243,7 +244,7 @@ export default class OverlayLayer extends InteractionLayer {
    *      visible: true
    * });
    */
-	brush (data) {
+	_getBrushGraphic (data) {
 		// Get new graphic & begin filling
 		const alpha = typeof data.alpha === "undefined" ? 1 : data.alpha;
 		const visible = typeof data.visible === "undefined" ? true : data.visible;
@@ -251,10 +252,10 @@ export default class OverlayLayer extends InteractionLayer {
 		brush.beginFill(data.fill);
 		// Draw the shape depending on type of brush
 		switch (data.shape) {
-			case this.BRUSH_TYPES.BOX:
+			case this._BRUSH_TYPES.BOX:
 				brush.drawRect(0, 0, data.width, data.height);
 				break;
-			case this.BRUSH_TYPES.POLYGON:
+			case this._BRUSH_TYPES.POLYGON:
 				brush.drawPolygon(data.vertices);
 				break;
 		}
@@ -274,11 +275,11 @@ export default class OverlayLayer extends InteractionLayer {
    * @param data {Object}       A collection of brush parameters
    * @param save {Boolean}      If true, will add the operation to the history buffer
    */
-	renderBrush (data, save = true) {
-		const brush = this.brush(data);
-		this.composite(brush);
+	_renderBrushGraphic (data, save = true) {
+		const brush = this._getBrushGraphic(data);
+		this._doRenderBrushToLayer(brush);
 		brush.destroy();
-		if (save) this.historyBuffer.push(data);
+		if (save) this._historyBuffer.push(data);
 	}
 
 	/**
@@ -286,8 +287,13 @@ export default class OverlayLayer extends InteractionLayer {
 	 * @param brush {Object}       PIXI Object to be used as brush
 	 * @param isClear              If layer should be cleared.
 	 */
-	composite (brush, {isClear = false} = {}) {
-		canvas.app.renderer.render(brush, this.layerTexture, isClear, null, false);
+	_doRenderBrushToLayer (brush, {isClear = false} = {}) {
+		canvas.app.renderer.render(brush, {
+			renderTexture: this._layerTexture,
+			clear: isClear,
+			transform: null,
+			skipUpdateTransform: false,
+		});
 	}
 
 	/**
@@ -295,7 +301,7 @@ export default class OverlayLayer extends InteractionLayer {
    */
 	setClear () {
 		const fill = new PIXI.Graphics();
-		this.composite(fill, {isClear: true});
+		this._doRenderBrushToLayer(fill, {isClear: true});
 		fill.destroy();
 	}
 
@@ -313,7 +319,7 @@ export default class OverlayLayer extends InteractionLayer {
    */
 	activate () {
 		super.activate();
-		this.interactive = true;
+		this.eventMode = "static";
 	}
 
 	/**
@@ -321,13 +327,13 @@ export default class OverlayLayer extends InteractionLayer {
    */
 	deactivate () {
 		super.deactivate();
-		this.interactive = false;
+		this.eventMode = "passive";
 	}
 
 	async draw () {
 		const out = await super.draw();
-		this.overlayInit();
-		this.addChild(this.layer);
+		await this.pInitOverlay();
+		this.addChild(this._layer);
 		return out;
 	}
 

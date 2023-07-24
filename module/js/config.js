@@ -2,7 +2,7 @@
  * Global PolMap Configuration Options
  */
 
-import OverlayLayer from "./classes/OverlayLayer.js";
+import OverlayLayer from "./layers/OverlayLayer.js";
 
 export default [
 	{

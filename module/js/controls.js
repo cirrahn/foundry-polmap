@@ -53,12 +53,12 @@ Hooks.on("getSceneControlButtons", (controls) => {
 						content: game.i18n.localize("POLMAP.Are you sure? Political map areas will be reset."),
 						buttons: {
 							blank: {
-								icon: "<i class=\"fas fa-eye\"></i>",
+								icon: `<i class="fas fa-eye"></i>`,
 								label: "Blank",
-								callback: () => canvas.polmap.resetLayer(),
+								callback: () => canvas.polmap.pResetLayer(),
 							},
 							cancel: {
-								icon: "<i class=\"fas fa-times\"></i>",
+								icon: `<i class="fas fa-times"></i>`,
 								label: "Cancel",
 							},
 						},
