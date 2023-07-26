@@ -27,4 +27,18 @@ export default [
 			onChange: OverlayLayer.refreshZIndex,
 		},
 	},
+	{
+		name: "isPlayerEditable",
+		data: {
+			name: "Player Editable",
+			hint: "If enabled, non-GM users will be able to draw on the political map layer.",
+			scope: "world",
+			config: true,
+			default: false,
+			type: Boolean,
+			onChange: () => {
+				if (ui.controls) ui.controls.initialize();
+			},
+		},
+	},
 ];

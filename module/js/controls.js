@@ -1,5 +1,6 @@
 import PoliticalMapConfig from "./classes/PoliticalMapConfig.js";
 import PaletteControls from "./classes/PaletteControls.js";
+import {MODULE_ID} from "./consts.js";
 
 let $wrpPaletteControls;
 
@@ -11,64 +12,72 @@ const _doCacheControls = () => {
  * Add control buttons
  */
 Hooks.on("getSceneControlButtons", (controls) => {
-	if (!game.user.isGM) return;
+	const toolMarker = {
+		name: "grid",
+		title: game.i18n.localize("POLMAP.Marker Tool"),
+		icon: "fas fa-border-none",
+	};
+
 	controls.push({
 		name: "polmap",
 		title: game.i18n.localize("POLMAP.Political Map Overlay"),
 		icon: "fas fa-handshake",
-		layer: "polmap",
+		layer: MODULE_ID,
 		activeTool: "grid",
-		tools: [
-			{
-				name: "polmaptoggle",
-				title: game.i18n.localize("POLMAP.Enable/Disable Political Map Overlay"),
-				icon: "fas fa-eye",
-				onClick: () => {
-					canvas.polmap.toggle();
+		visible: game.user.can("DRAWING_CREATE")
+			&& (game.user.isGM || game.settings.get(MODULE_ID, "isPlayerEditable")),
+		tools: game.user.isGM
+			? [
+				{
+					name: "polmaptoggle",
+					title: game.i18n.localize("POLMAP.Enable/Disable Political Map Overlay"),
+					icon: "fas fa-eye",
+					onClick: () => {
+						canvas.polmap.toggle();
+					},
+					active: canvas.polmap?.visible,
+					toggle: true,
 				},
-				active: canvas.polmap?.visible,
-				toggle: true,
-			},
-			{
-				name: "grid",
-				title: game.i18n.localize("POLMAP.Marker Tool"),
-				icon: "fas fa-border-none",
-			},
-			{
-				name: "sceneConfig",
-				title: game.i18n.localize("POLMAP.Scene Configuration"),
-				icon: "fas fa-cog",
-				onClick: () => {
-					new PoliticalMapConfig({scene: canvas.scene}).render(true);
+				toolMarker,
+				{
+					name: "sceneConfig",
+					title: game.i18n.localize("POLMAP.Scene Configuration"),
+					icon: "fas fa-cog",
+					onClick: () => {
+						new PoliticalMapConfig({scene: canvas.scene}).render(true);
+					},
+					button: true,
 				},
-				button: true,
-			},
-			{
-				name: "clearfog",
-				title: game.i18n.localize("POLMAP.Reset Political Map Overlay"),
-				icon: "fas fa-trash",
-				onClick: () => {
-					const dg = new Dialog({
-						title: game.i18n.localize("POLMAP.Reset Political Map Overlay"),
-						content: game.i18n.localize("POLMAP.Are you sure? Political map areas will be reset."),
-						buttons: {
-							blank: {
-								icon: `<i class="fas fa-eye"></i>`,
-								label: "Blank",
-								callback: () => canvas.polmap.pResetLayer(),
+				{
+					name: "clearfog",
+					title: game.i18n.localize("POLMAP.Reset Political Map Overlay"),
+					icon: "fas fa-trash",
+					onClick: () => {
+						const dg = new Dialog({
+							title: game.i18n.localize("POLMAP.Reset Political Map Overlay"),
+							content: game.i18n.localize("POLMAP.Are you sure? Political map areas will be reset."),
+							buttons: {
+								blank: {
+									icon: `<i class="fas fa-eye"></i>`,
+									label: "Blank",
+									callback: () => canvas.polmap.pResetLayer(),
+								},
+								cancel: {
+									icon: `<i class="fas fa-times"></i>`,
+									label: "Cancel",
+								},
 							},
-							cancel: {
-								icon: `<i class="fas fa-times"></i>`,
-								label: "Cancel",
-							},
-						},
-						default: "reset",
-					});
-					dg.render(true);
+							default: "reset",
+						});
+						dg.render(true);
+					},
+					button: true,
 				},
-				button: true,
-			},
-		],
+			]
+			: [
+				toolMarker,
+			]
+		,
 	});
 });
 

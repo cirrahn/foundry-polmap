@@ -1,6 +1,7 @@
 import OverlayLayer from "./OverlayLayer.js";
 import {Layout} from "../libs/hexagons.js";
 import {hexObjsToArr} from "../helpers.js";
+import {MODULE_ID} from "../consts.js";
 
 export default class PoliticalMapLayer extends OverlayLayer {
 	static _LINE_OPTS_ERASE = {
@@ -11,11 +12,10 @@ export default class PoliticalMapLayer extends OverlayLayer {
 	};
 
 	constructor () {
-		super("polmap");
+		super();
 
 		// Register event listeners
 		this._registerMouseListeners();
-		this._registerKeyboardListeners();
 
 		this._DEFAULTS = Object.assign(this._DEFAULTS, {
 			gmAlpha: 0.5,
@@ -136,19 +136,19 @@ export default class PoliticalMapLayer extends OverlayLayer {
 		// Check if update applies to current viewed scene
 		if (!scene._view) return;
 		// React to visibility change
-		if (hasProperty(data, `flags.${this._layerName}.visible`)) {
-			canvas[this._layerName].visible = data.flags[this._layerName].visible;
+		if (hasProperty(data, `flags.${MODULE_ID}.visible`)) {
+			canvas[MODULE_ID].visible = data.flags[MODULE_ID].visible;
 		}
-		// React to _doRenderBrushToLayer history change
-		if (hasProperty(data, `flags.${this._layerName}.history`)) {
-			await canvas[this._layerName].pRenderStack(data.flags[this._layerName].history);
+		// React to brush history change
+		if (hasProperty(data, `flags.${MODULE_ID}.history`)) {
+			await canvas[MODULE_ID].pRenderStack(data.flags[MODULE_ID].history);
 		}
 		// React to alpha/tint changes
-		if (!game.user.isGM && hasProperty(data, `flags.${this._layerName}.playerAlpha`)) {
-			await canvas[this._layerName].setAlpha(data.flags[this._layerName].playerAlpha);
+		if (!game.user.isGM && hasProperty(data, `flags.${MODULE_ID}.playerAlpha`)) {
+			await canvas[MODULE_ID].setAlpha(data.flags[MODULE_ID].playerAlpha);
 		}
-		if (game.user.isGM && hasProperty(data, `flags.${this._layerName}.gmAlpha`)) {
-			await canvas[this._layerName].setAlpha(data.flags[this._layerName].gmAlpha);
+		if (game.user.isGM && hasProperty(data, `flags.${MODULE_ID}.gmAlpha`)) {
+			await canvas[MODULE_ID].setAlpha(data.flags[MODULE_ID].gmAlpha);
 		}
 	}
 
@@ -159,23 +159,6 @@ export default class PoliticalMapLayer extends OverlayLayer {
 		this.addListener("pointerdown", this._pointerDown);
 		this.addListener("pointerup", this._pointerUp);
 		this.addListener("pointermove", this._pointerMove);
-	}
-
-	/**
-	* Adds the keyboard listeners to the layer
-	*/
-	_registerKeyboardListeners () {
-		$(document).keydown((event) => {
-			// Only react if polmap layer is active
-			if (ui.controls.activeControl !== this._layerName) return;
-			// Don't react if game body isn't target
-			if (event.target.tagName !== "BODY") return;
-			// React to ctrl+z
-			if (event.key === "Z" && event.ctrlKey) {
-				event.stopPropagation();
-				this.undo();
-			}
-		});
 	}
 
 	/**

@@ -1,12 +1,12 @@
 import {polmapLog} from "../helpers.js";
+import {MODULE_ID} from "../consts.js";
+import {HistorySocketInterface} from "../socket/history.js";
 
 export default class OverlayLayer extends InteractionLayer {
 	static _TINT_ERASER = 0xFF00FF;
 
-	constructor (layerName) {
+	constructor () {
 		super();
-		this._isLocked = false;
-		this._layerName = layerName;
 		this._historyBuffer = [];
 		this._pointer = 0;
 		this._gridLayout = {};
@@ -87,7 +87,7 @@ export default class OverlayLayer extends InteractionLayer {
 	getSetting (name, {scene = null} = {}) {
 		scene = scene || canvas.scene;
 
-		let setting = scene.getFlag(this._layerName, name);
+		let setting = scene.getFlag(MODULE_ID, name);
 		if (setting === undefined) setting = this.getUserSetting(name);
 		if (setting === undefined) setting = this._DEFAULTS[name];
 		return setting;
@@ -96,17 +96,17 @@ export default class OverlayLayer extends InteractionLayer {
 	async setSetting (name, value, {scene = null} = {}) {
 		scene = scene || canvas.scene;
 
-		return scene.setFlag(this._layerName, name, value);
+		return scene.setFlag(MODULE_ID, name, value);
 	}
 
 	getUserSetting (name) {
-		let setting = game.user.getFlag(this._layerName, name);
+		let setting = game.user.getFlag(MODULE_ID, name);
 		if (setting === undefined) setting = this._DEFAULTS[name];
 		return setting;
 	}
 
 	async setUserSetting (name, value) {
-		return game.user.setFlag(this._layerName, name, value);
+		return game.user.setFlag(MODULE_ID, name, value);
 	}
 
 	getTempSetting (name) {
@@ -124,18 +124,21 @@ export default class OverlayLayer extends InteractionLayer {
    * @param stop {Number}        The position in the history stack to stop rendering
    */
 	async pRenderStack (
-		history = canvas.scene.getFlag(this._layerName, "history"),
+		history = canvas.scene.getFlag(MODULE_ID, "history"),
 		start = this._pointer,
-		stop = canvas.scene.getFlag(this._layerName, "history.pointer"),
+		stop = undefined,
 	) {
 		// If history is blank, do nothing
-		if (history === undefined) {
-			return;
-		}
+		if (history === undefined) return;
+
+		const events = history.events.filter(arr => arr?.length);
+
 		// If history is zero, reset scene overlay
-		if (history.events.length === 0) await this.pResetLayer(false);
+		if (events.length === 0) return this.pResetLayer(false);
+
 		if (start === undefined) start = 0;
-		if (stop === undefined) stop = history.events.length;
+		stop = stop === undefined ? events.length : stop;
+
 		// If pointer precedes the stop, reset and start from 0
 		if (stop <= this._pointer) {
 			await this.pResetLayer(false);
@@ -145,8 +148,8 @@ export default class OverlayLayer extends InteractionLayer {
 		polmapLog(`Rendering from: ${start} to ${stop}`);
 		// Render all ops starting from pointer
 		for (let i = start; i < stop; i += 1) {
-			for (let j = 0; j < history.events[i].length; j += 1) {
-				this._renderBrushGraphic(history.events[i][j], false);
+			for (let j = 0; j < events[i].length; j += 1) {
+				this._renderBrushGraphic(events[i][j], false);
 			}
 		}
 		// Update local pointer
@@ -159,27 +162,12 @@ export default class OverlayLayer extends InteractionLayer {
 	async commitHistory () {
 		// Do nothing if no history to be committed, otherwise get history
 		if (this._historyBuffer.length === 0) return;
-		if (this._isLocked) return;
-		this._isLocked = true;
-		let history = canvas.scene.getFlag(this._layerName, "history");
-		// If history storage doesn't exist, create it
-		if (!history) {
-			history = {
-				events: [],
-				pointer: 0,
-			};
-		}
-		// If pointer is less than history length (f.x. user undo), truncate history
-		history.events = history.events.slice(0, history.pointer);
-		// Push the new history buffer to the scene
-		history.events.push(this._historyBuffer);
-		history.pointer = history.events.length;
-		await canvas.scene.unsetFlag(this._layerName, "history");
-		await this.setSetting("history", history);
-		polmapLog(`Pushed ${this._historyBuffer.length} updates.`);
-		// Clear the history buffer
+
+		const isApproved = await HistorySocketInterface.pCommitHistory(game.userId, this._historyBuffer);
+		polmapLog(`Pushed ${this._historyBuffer.length} updates (via GM socket).`);
 		this._historyBuffer = [];
-		this._isLocked = false;
+
+		if (!isApproved) await this.pRenderStack();
 	}
 
 	/**
@@ -189,38 +177,14 @@ export default class OverlayLayer extends InteractionLayer {
 	async pResetLayer (save = true) {
 		// Clear the layer
 		this.setClear();
-		// If save, also unset history and reset pointer
-		if (save) {
-			await canvas.scene.unsetFlag(this._layerName, "history");
-			await canvas.scene.setFlag(this._layerName, "history", {
-				events: [],
-				pointer: 0,
-			});
-			this._pointer = 0;
-		}
-	}
 
-	/**
-   * Steps the history buffer back X steps and redraws
-   * @param steps {Integer} Number of steps to undo, default 1
-   */
-	async undo (steps = 1) {
-		polmapLog(`Undoing ${steps} steps.`);
-		// Grab existing history
-		// Todo: this could probably just grab and set the pointer for a slight performance improvement
-		let history = canvas.scene.getFlag(this._layerName, "history");
-		if (!history) {
-			history = {
-				events: [],
-				pointer: 0,
-			};
-		}
-		let newpointer = this._pointer - steps;
-		if (newpointer < 0) newpointer = 0;
-		// Set new pointer & update history
-		history.pointer = newpointer;
-		await canvas.scene.unsetFlag(this._layerName, "history");
-		await canvas.scene.setFlag(this._layerName, "history", history);
+		if (!save) return;
+
+		// If save, also unset history and reset pointer
+		const isApproved = await HistorySocketInterface.pResetHistory(game.userId);
+		this._pointer = 0;
+
+		if (!isApproved) await this.pRenderStack();
 	}
 
 	/* -------------------------------------------- */
@@ -338,6 +302,6 @@ export default class OverlayLayer extends InteractionLayer {
 	}
 
 	static refreshZIndex () {
-		canvas.polmap.zIndex = game.settings.get("polmap", "zIndex");
+		canvas.polmap.zIndex = game.settings.get(MODULE_ID, "zIndex");
 	}
 }

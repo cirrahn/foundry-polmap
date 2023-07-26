@@ -15,7 +15,7 @@ export default class PaletteControls extends FormApplication {
 			submitOnChange: true,
 			submitOnClose: true,
 			popOut: false,
-			editable: game.user.isGM,
+			editable: true,
 			template: "modules/polmap/templates/palette-controls.hbs",
 			id: "filter-config",
 			title: game.i18n.localize("POLMAP.Political Map Options"),

@@ -1,3 +1,7 @@
+export const MODULE_ID = "polmap";
+
+/* -------------------------------------------- */
+
 export const RGB_RED = {name: "Red", color: "#ff4500"};
 export const RGB_ORANGE = {name: "Orange", color: "#ffa800"};
 export const RGB_YELLOW = {name: "Yellow", color: "#ffd635"};

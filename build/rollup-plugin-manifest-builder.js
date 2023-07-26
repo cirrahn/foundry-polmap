@@ -50,6 +50,16 @@ export class RollupManifestBuilder {
 					"path": "lang/en.json",
 				},
 			],
+			"socket": true,
+			"requires": [
+				{
+					"id": "socketlib",
+					"type": "module",
+					"compatibility": {
+						"minimum": "1.0.13",
+					},
+				},
+			],
 		};
 
 		fs.mkdirSync(systemPath, {recursive: true});

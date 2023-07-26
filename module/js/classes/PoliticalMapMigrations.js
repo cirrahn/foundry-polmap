@@ -1,11 +1,12 @@
 import {polmapLog} from "../helpers.js";
+import {MODULE_ID} from "../consts.js";
 
 export default class PoliticalMapMigrations {
 	static async check () {
 		if (!game.user.isGM) return;
 		polmapLog("Checking migrations");
 
-		let ver = game.settings.get("polmap", "migrationVersion");
+		let ver = game.settings.get(MODULE_ID, "migrationVersion");
 
 		if (ver == null || !isNaN(ver)) return; // Disable example migration--remove as required
 
@@ -17,7 +18,7 @@ export default class PoliticalMapMigrations {
 		if (ver > 1) return;
 		polmapLog("Performing migration #1", true);
 		// (Implement as required)
-		await game.settings.set("polmap", "migrationVersion", 1);
+		await game.settings.set(MODULE_ID, "migrationVersion", 1);
 		return 1;
 	}
 }
